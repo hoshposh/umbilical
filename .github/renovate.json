@@ -9,10 +9,13 @@
   "packageRules": [
     {
       "matchUpdateTypes": [
-        "minor",
         "patch"
       ],
       "automerge": true
+    },
+    {
+      "matchDatasources": ["golang-version"],
+      "rangeStrategy": "bump"
     }
   ]
 }
