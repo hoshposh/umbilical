@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -155,7 +156,7 @@ func (ws *WebhookServer) GenericHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func StartWebhookServer(port int, secret string, h MessageDispatcher) *http.Server {
+func StartWebhookServer(port int, secret string, h MessageDispatcher, tunnelListener net.Listener) *http.Server {
 	ws := &WebhookServer{
 		Handler: h,
 		Secret:  secret,
@@ -173,6 +174,15 @@ func StartWebhookServer(port int, secret string, h MessageDispatcher) *http.Serv
 	}
 
 	go func() {
+		if tunnelListener != nil {
+			go func() {
+				log.Printf("Starting webhook server on tunnel")
+				if err := srv.Serve(tunnelListener); err != nil && err != http.ErrServerClosed {
+					log.Errorf("Webhook server (tunnel) failed: %v", err)
+				}
+			}()
+		}
+		
 		log.Printf("Starting webhook server on %s", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Webhook server failed: %v", err)

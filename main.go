@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,6 +24,7 @@ import (
 	"github.com/hoshposh/umbilical/handler"
 	"github.com/hoshposh/umbilical/mcp"
 	"github.com/hoshposh/umbilical/pkg/simplex"
+	"github.com/hoshposh/umbilical/pkg/tunnel/ngrok"
 	"github.com/hoshposh/umbilical/server"
 	syncpkg "github.com/hoshposh/umbilical/sync"
 )
@@ -41,6 +43,10 @@ type Config struct {
 	WebhookSecret       string `json:"webhookSecret"`
 	SyncRemote          string `json:"syncRemote"`
 	SyncIntervalMinutes int    `json:"syncIntervalMinutes"`
+	TunnelEnabled       bool   `json:"tunnelEnabled"`
+	TunnelProvider      string `json:"tunnelProvider"`
+	NgrokAuthToken      string `json:"ngrokAuthToken"`
+	NgrokDomain         string `json:"ngrokDomain"`
 }
 
 var version = "dev"
@@ -72,6 +78,12 @@ func main() {
 	syncRemote := flag.String("sync-remote", "", "rclone remote path for sync, e.g., 'gdrive:Research'")
 	syncInterval := flag.Duration("sync-interval", 15*time.Minute, "Interval for sync loop")
 	setupFlag := flag.Bool("setup", false, "Run the interactive setup wizard")
+
+	// Tunnel flags
+	tunnelEnabled := flag.Bool("tunnel", false, "Enable embedded zero-trust tunnel")
+	tunnelProvider := flag.String("tunnel-provider", "ngrok", "Tunnel provider to use (default: ngrok)")
+	ngrokAuthToken := flag.String("ngrok-token", "", "ngrok auth token")
+	ngrokDomain := flag.String("ngrok-domain", "", "ngrok custom domain")
 
 	// Role splitting flags
 	roleFlag := flag.String("role", "standalone", "Role to run: 'standalone', 'ingestor', or 'executor'")
@@ -154,6 +166,18 @@ func main() {
 		if c.SyncIntervalMinutes != 0 {
 			*syncInterval = time.Duration(c.SyncIntervalMinutes) * time.Minute
 		}
+		if c.TunnelEnabled {
+			*tunnelEnabled = c.TunnelEnabled
+		}
+		if c.TunnelProvider != "" {
+			*tunnelProvider = c.TunnelProvider
+		}
+		if c.NgrokAuthToken != "" {
+			*ngrokAuthToken = c.NgrokAuthToken
+		}
+		if c.NgrokDomain != "" {
+			*ngrokDomain = c.NgrokDomain
+		}
 	}
 
 	if *botProfile == "" {
@@ -195,6 +219,7 @@ func main() {
 	var dispatcher server.MessageDispatcher
 	var msgHandler *handler.MessageHandler
 	var httpServer *http.Server
+	var tunnelURL string
 
 	if isStandalone || isExecutor {
 		cmdParts := strings.Fields(*mcpCmdLine)
@@ -239,7 +264,27 @@ func main() {
 		if dispatcher == nil {
 			dispatcher = &handlerAdapter{h: msgHandler}
 		}
-		httpServer = server.StartWebhookServer(*webhookPort, *webhookSecret, dispatcher)
+
+		var tunnelListener net.Listener
+		if *tunnelEnabled {
+			if *tunnelProvider == "" || *tunnelProvider == "ngrok" {
+				if *ngrokAuthToken == "" {
+					log.Warn("ngrok tunnel enabled but no auth token provided. Trying to start anyway (may fail if not in env).")
+				}
+				tun := ngrok.New(*ngrokAuthToken, *ngrokDomain)
+				l, url, err := tun.Start(ctx)
+				if err != nil {
+					log.Fatalf("Failed to start tunnel: %v", err)
+				}
+				log.Infof("🚀 Tunnel established! Public webhook URL: %s", url)
+				tunnelListener = l
+				tunnelURL = url
+			} else {
+				log.Fatalf("Unsupported tunnel provider: %s", *tunnelProvider)
+			}
+		}
+
+		httpServer = server.StartWebhookServer(*webhookPort, *webhookSecret, dispatcher, tunnelListener)
 	}
 
 	if isStandalone || isExecutor {
@@ -273,7 +318,7 @@ func main() {
 	}
 
 	if isStandalone {
-		printDashboard(*botProfile, *allowedSender, *vaultPath, *webhookPort, *webhookSecret, *syncRemote)
+		printDashboard(*botProfile, *allowedSender, *vaultPath, *webhookPort, *webhookSecret, *syncRemote, tunnelURL)
 	}
 	log.Printf("Listening for SimpleX messages on role: %s...", *roleFlag)
 

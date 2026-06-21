@@ -171,6 +171,32 @@ func runSetup(initialConfigPath string) {
 		}),
 		huh.NewGroup(
 			huh.NewConfirm().
+				Title("Enable ngrok Tunnel?").
+				Description("Expose your local webhook server to the internet using an embedded ngrok tunnel").
+				Value(&c.TunnelEnabled),
+		).WithHideFunc(func() bool {
+			return c.Role == "executor" || !enableWebhooks
+		}),
+		huh.NewGroup(
+			huh.NewInput().
+				Title("ngrok Auth Token").
+				Description("Your ngrok authtoken from the ngrok dashboard").
+				Value(&c.NgrokAuthToken).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("ngrok auth token cannot be empty if tunnel is enabled")
+					}
+					return nil
+				}),
+			huh.NewInput().
+				Title("ngrok Custom Domain").
+				Description("Optional: custom ngrok domain (e.g., your-app.ngrok-free.app)").
+				Value(&c.NgrokDomain),
+		).WithHideFunc(func() bool {
+			return c.Role == "executor" || !enableWebhooks || !c.TunnelEnabled
+		}),
+		huh.NewGroup(
+			huh.NewConfirm().
 				Title("Enable Google Drive Sync?").
 				Description("Automatically sync a Research folder via rclone").
 				Value(&enableSync),

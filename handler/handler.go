@@ -59,7 +59,13 @@ func (h *MessageHandler) Handle(ctx context.Context, msg string) (Result, error)
 		content = "- [ ] " + after
 		destFile = "Tasks.md"
 	} else if after, ok := strings.CutPrefix(msg, "!link "); ok {
-		content = " - <" + after + ">"
+		if strings.Contains(after, "\n") {
+			content = after
+		} else if strings.Contains(after, " ") || strings.Contains(after, "[") {
+			content = " - " + after
+		} else {
+			content = " - <" + after + ">"
+		}
 		destFile = "Links.md"
 	} else if (strings.HasPrefix(msg, "http://") || strings.HasPrefix(msg, "https://")) && !strings.Contains(msg, " ") {
 		content = " - <" + msg + ">"

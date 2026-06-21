@@ -11,7 +11,7 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-func printDashboard(bot, allowed, vault string, webhookPort int, webhookSecret string, syncRemote string) {
+func printDashboard(bot, allowed, vault string, webhookPort int, webhookSecret string, syncRemote string, tunnelURL string) {
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#FAFAFA")).
@@ -44,6 +44,10 @@ func printDashboard(bot, allowed, vault string, webhookPort int, webhookSecret s
 		webhookStr += " (Secured)"
 	}
 	rows += labelStyle.Render("Webhooks:") + valueStyle.Render(webhookStr) + "\n"
+
+	if tunnelURL != "" {
+		rows += labelStyle.Render("Tunnel URL:") + valueStyle.Render(tunnelURL) + "\n"
+	}
 
 	if syncRemote != "" {
 		rows += labelStyle.Render("Drive Sync:") + valueStyle.Render(syncRemote) + "\n"
