@@ -182,7 +182,7 @@ func StartWebhookServer(port int, secret string, h MessageDispatcher, tunnelList
 				}
 			}()
 		}
-		
+
 		log.Printf("Starting webhook server on %s", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Webhook server failed: %v", err)
