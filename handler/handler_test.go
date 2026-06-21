@@ -85,6 +85,22 @@ func TestHandle_Routes(t *testing.T) {
 		assert.Equal(t, expectedHeading+" - <https://example.com>\n", m.calledArgs["content"])
 	})
 
+	t.Run("Link prefix with spaces routes to Links.md and prepends list marker without brackets", func(t *testing.T) {
+		h, m := newHandler("")
+		result, err := h.Handle(context.Background(), "!link [Go](https://go.dev)")
+		require.NoError(t, err)
+		assert.Equal(t, "Links.md", result.DestFile)
+		assert.Equal(t, expectedHeading+" - [Go](https://go.dev)\n", m.calledArgs["content"])
+	})
+
+	t.Run("Link prefix with newline routes to Links.md as-is without brackets or markers", func(t *testing.T) {
+		h, m := newHandler("")
+		result, err := h.Handle(context.Background(), "!link ### Title\nContent")
+		require.NoError(t, err)
+		assert.Equal(t, "Links.md", result.DestFile)
+		assert.Equal(t, expectedHeading+"### Title\nContent\n", m.calledArgs["content"])
+	})
+
 	t.Run("Bare URL auto-detected as link", func(t *testing.T) {
 		h, m := newHandler("")
 		result, err := h.Handle(context.Background(), "https://google.com")

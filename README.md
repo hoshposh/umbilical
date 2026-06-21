@@ -120,7 +120,10 @@ You can alternatively pass a single JSON config file (e.g., stored securely in `
   "allowedSender": "myphone",
   "webhookSecret": "my-super-secret",
   "syncRemote": "gdrive:Research",
-  "syncIntervalMinutes": 15
+  "syncIntervalMinutes": 15,
+  "tunnelEnabled": true,
+  "tunnelProvider": "ngrok",
+  "ngrokAuthToken": "your-ngrok-token"
 }
 ```
 
@@ -128,11 +131,28 @@ You can alternatively pass a single JSON config file (e.g., stored securely in `
 ./umbilical -config="/path/to/config.json"
 ```
 
-## Feedly Webhook Setup & Cloudflare Tunnel
+## Webhook Setup & Zero-Trust Tunnels
 
-To connect Feedly to your locally-running bot, you need to securely expose the local HTTP server to the internet. We recommend using a **Cloudflare Tunnel**, which allows you to expose the local service without opening inbound firewall ports or needing a static public IP. The daemon establishes an outbound-only connection to Cloudflare's edge, keeping your server hidden and protected from direct external access.
+To connect external tools like Feedly to your locally-running bot, you need to securely expose the local HTTP webhook server to the internet. 
 
-### 1. Setting up `cloudflared`
+Umbilical has a **built-in zero-trust tunnel** powered by the official ngrok Go SDK. This allows you to expose the local service instantly without opening inbound firewall ports, configuring a reverse proxy, or installing any external binaries. The daemon establishes an outbound-only connection, keeping your server hidden and protected.
+
+### 1. Built-in ngrok Tunnel (Recommended)
+
+To use the embedded ngrok tunnel, you just need a free ngrok account.
+
+1. **Get an Auth Token:** Sign up at [ngrok.com](https://dashboard.ngrok.com/signup) and copy your Auth Token from the dashboard.
+2. **Enable the Tunnel:** Update your config or pass the CLI flags:
+   ```bash
+   ./umbilical -role standalone -vault /path -tunnel -ngrok-token="YOUR_TOKEN"
+   ```
+   *Note: If you have a static domain configured in ngrok, you can optionally add `-ngrok-domain="your-domain.ngrok-free.app"`.*
+3. **Copy the URL:** When Umbilical starts, it will print your public webhook URL in the console:
+   `🚀 Tunnel established! Public webhook URL: https://example-url.ngrok-free.app`
+
+### Alternative: External Cloudflare Tunnel
+
+If you prefer not to use ngrok or already use Cloudflare Zero Trust, you can disable the built-in tunnel and run `cloudflared` as a sidecar process:
 
 - **[Installation Guide](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)**: Download and install the `cloudflared` client.
 - **[Tunnels Overview](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)**: Learn how Cloudflare Tunnels securely route traffic.
@@ -154,7 +174,7 @@ sudo systemctl enable --now cloudflared
 Once your tunnel is running:
 1. Go to your Feedly Developer Dashboard -> Webhooks.
 2. Add a new webhook:
-   - **URL**: `<YOUR_CLOUDFLARED_URL>/webhooks/feedly`
+   - **URL**: `<YOUR_TUNNEL_URL>/webhooks/feedly`
    - **Event Type**: `NewEntrySaved`
    - **Authorization Header**: Bearer token matching your `-webhook-secret`.
 
