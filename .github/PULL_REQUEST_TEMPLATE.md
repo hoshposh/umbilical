@@ -7,7 +7,7 @@
 ## Testing
 <!-- Describe how you tested your changes (e.g., local unit tests, webhook testing) -->
 - [ ] Added unit tests / Verified existing tests pass
-- [ ] Tested locally with a Keybase or Feedly payload
+- [ ] Tested locally with a SimpleX or Webhook payload
 
 ## Checklist:
 - [ ] My code follows the style guidelines of this project (`gofmt`)

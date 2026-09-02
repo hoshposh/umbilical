@@ -4,7 +4,6 @@
 *.dll
 *.so
 *.dylib
-keybase-obsidian-bot
 umbilical
 
 # Test binary, built with `go test -c`
