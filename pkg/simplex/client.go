@@ -152,7 +152,7 @@ type rawResponse struct {
 //	    }]
 //	  }
 //	}
-func (c *Client) Listen(handler func(msg IncomingMessage)) error {
+func (c *Client) Listen(ctx context.Context, handler func(ctx context.Context, msg IncomingMessage)) error {
 	log.Infof("simplex: listen loop started")
 	for {
 		_, msgBytes, err := c.conn.ReadMessage()
@@ -233,7 +233,7 @@ func (c *Client) Listen(handler func(msg IncomingMessage)) error {
 				continue
 			}
 
-			handler(IncomingMessage{SenderName: sender, Text: text})
+			handler(ctx, IncomingMessage{SenderName: sender, Text: text})
 		}
 	}
 }
