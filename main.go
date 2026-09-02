@@ -289,7 +289,7 @@ func main() {
 
 	if isStandalone || isExecutor {
 		go func() {
-			err := simplexClient.Listen(func(msg simplex.IncomingMessage) {
+			err := simplexClient.Listen(ctx, func(ctx context.Context, msg simplex.IncomingMessage) {
 				if msg.SenderName != *allowedSender {
 					log.Debugf("Ignoring message from unauthorized sender: %s", msg.SenderName)
 					return
@@ -310,10 +310,8 @@ func main() {
 					}
 				}
 			})
-			if err != nil {
-				log.Errorf("SimpleX listener exited: %v", err)
-				cancel()
-			}
+			log.Errorf("SimpleX listener exited: %v", err)
+			cancel()
 		}()
 	}
 
