@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.6
-	charm.land/log/v2 v2.0.0
+	charm.land/log/v2 v2.0.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
 	golang.ngrok.com/ngrok/v2 v2.2.0
