@@ -15,6 +15,7 @@
     },
     {
       "matchDatasources": ["golang-version"],
+      "groupName": "go",
       "rangeStrategy": "bump"
     }
   ]
