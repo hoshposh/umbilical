@@ -15,8 +15,12 @@
     },
     {
       "matchDatasources": ["golang-version"],
-      "groupName": "go",
       "rangeStrategy": "bump"
+    },
+    {
+      "matchManagers": ["gomod", "mise"],
+      "matchDepNames": ["go", "golang/go"],
+      "groupName": "go"
     }
   ]
 }
