@@ -8,7 +8,7 @@ require (
 	charm.land/log/v2 v2.0.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
-	golang.ngrok.com/ngrok/v2 v2.3.0
+	golang.ngrok.com/ngrok/v2 v2.4.0
 )
 
 require (
