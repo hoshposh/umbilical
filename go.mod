@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	charm.land/huh/v2 v2.0.3
-	charm.land/lipgloss/v2 v2.0.6
+	charm.land/lipgloss/v2 v2.1.0
 	charm.land/log/v2 v2.0.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.12.1
